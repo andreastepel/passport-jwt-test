@@ -25,8 +25,6 @@ exports.store = async (req, res) => {
 
     const password = '_' + Math.random().toString(36).substr(2, 9) //generate a random password
 
-    console.log(req.body.username)
-
     const newUser = await User.create({
       email: req.body.email,
       username: req.body.username,

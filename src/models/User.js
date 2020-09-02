@@ -40,7 +40,7 @@ module.exports = (sequelize, DataTypes) => {
     })
   })
 
-  User.prototype.comparePassword = (password) => {
+  User.prototype.comparePassword = function (password) {
     return bcrypt.compareSync(password, this.password)
   }
 
@@ -62,19 +62,19 @@ module.exports = (sequelize, DataTypes) => {
     })
   }
 
-  User.prototype.generatePasswordReset = () => {
+  User.prototype.generatePasswordReset = function () {
     this.resetPasswordToken = crypto.randomBytes(20).toString('hex')
     this.resetPasswordExpires = Date.now() + 3600000 //expires in an hour
   }
 
-  User.prototype.generateVerificationToken = async () => {
-    console.log(this)
+  // !!! Don't use arrow function! Otherwise this.id won't work
+  User.prototype.generateVerificationToken = async function () {
     let payload = {
       userId: this.id,
       token: crypto.randomBytes(20).toString('hex'),
     }
 
-    let token = sequelize.models.Token.build(payload)
+    let token = await sequelize.models.Token.create(payload)
 
     return token
   }

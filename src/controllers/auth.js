@@ -20,8 +20,6 @@ exports.register = async (req, res) => {
 
     const newUser = await User.create({ ...req.body, role: 'basic' })
 
-    console.log(newUser)
-
     await sendVerificationEmail(newUser, req, res)
   } catch (error) {
     res.status(500).json({ success: false, message: error.message })
@@ -138,13 +136,10 @@ exports.resendToken = async (req, res) => {
 
 async function sendVerificationEmail(user, req, res) {
   try {
-    console.log(user)
-    const token = user.generateVerificationToken()
+    const token = await user.generateVerificationToken()
 
-    console.log(token)
-
-    // Save the verification token
-    await token.save()
+    console.log(token.token)
+    console.log(req.headers)
 
     let subject = 'Account Verification Token'
     let to = user.email
