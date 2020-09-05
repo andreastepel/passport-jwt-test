@@ -7,10 +7,8 @@ const { sendEmail } = require('../utils/index')
 // @access Public
 exports.register = async (req, res) => {
   try {
-    const { email } = req.body
-
     // Make sure this account doesn't already exist
-    const user = await User.findOne({ email })
+    const user = await User.findOne({ where: { email: req.body.email } })
 
     if (user)
       return res.status(401).json({
@@ -18,7 +16,7 @@ exports.register = async (req, res) => {
           'The email address you have entered is already associated with another account.',
       })
 
-    const newUser = await User.create({ ...req.body, role: 'basic' })
+    const newUser = await User.create({ ...req.body, role: 'basic', verified: false })
 
     await sendVerificationEmail(newUser, req, res)
   } catch (error) {
@@ -73,7 +71,7 @@ exports.verify = async (req, res) => {
 
   try {
     // Find a matching token
-    const token = await Token.findOne({ token: req.params.token })
+    const token = await Token.findOne({where: { token: req.params.token }})
 
     if (!token)
       return res.status(400).json({
@@ -82,25 +80,28 @@ exports.verify = async (req, res) => {
       })
 
     // If we found a token, find a matching user
-    User.findOne({ _id: token.userId }, (err, user) => {
-      if (!user)
-        return res
-          .status(400)
-          .json({ message: 'We were unable to find a user for this token.' })
+    let user = await User.findByPk(token.userId)
 
-      if (user.isVerified)
-        return res
-          .status(400)
-          .json({ message: 'This user has already been verified.' })
+    if (!user)
+      return res
+        .status(400)
+        .json({ message: 'We were unable to find a user for this token.' })
 
-      // Verify and save the user
+    if (user.isVerified)
+      return res
+        .status(400)
+        .json({ message: 'This user has already been verified.' })
+
+    // Verify and save the user
+    try {
       user.isVerified = true
-      user.save(function (err) {
-        if (err) return res.status(500).json({ message: err.message })
-
-        res.status(200).send('The account has been verified. Please log in.')
-      })
-    })
+      await user.save()
+    } 
+    catch(err){
+      return res.status(500).json({ message: err.message })
+    }
+    res.status(200).send('The account has been verified. Please log in.')
+    
   } catch (error) {
     res.status(500).json({ message: error.message })
   }

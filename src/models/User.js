@@ -36,6 +36,7 @@ module.exports = (sequelize, DataTypes) => {
         if (err) return
 
         user.password = hash
+        user.save()
       })
     })
   })
@@ -62,9 +63,10 @@ module.exports = (sequelize, DataTypes) => {
     })
   }
 
-  User.prototype.generatePasswordReset = function () {
-    this.resetPasswordToken = crypto.randomBytes(20).toString('hex')
-    this.resetPasswordExpires = Date.now() + 3600000 //expires in an hour
+  User.prototype.generatePasswordReset = async function () {
+    await this.setDataValue('resetPasswordToken', crypto.randomBytes(20).toString('hex'))
+    await this.setDataValue('resetPasswordExpires', Date.now() + 3600000) //expires in an hour
+    await this.save()
   }
 
   // !!! Don't use arrow function! Otherwise this.id won't work

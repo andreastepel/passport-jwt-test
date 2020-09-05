@@ -32,13 +32,8 @@ exports.store = async (req, res) => {
       firstName: this.body.firstName,
     })
 
-    const user_ = await newUser.save()
-
     //Generate and set password reset token
-    user_.generatePasswordReset()
-
-    // Save the updated user object
-    await user_.save()
+    await newUser.generatePasswordReset()
 
     //Get mail options
     let domain = 'http://' + req.headers.host
